@@ -4,241 +4,257 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Максимальное количество записей
 #define MAX_RECORDS 100
-// Имя файла для сохранения данных
-#define FILENAME "smartwatches.txt"
+#define MAX_STR_LEN 50
 
-// Структура для хранения информации о смарт-часах
 typedef struct {
-    char manufacturer[50]; // Производитель
-    char type[50];         // Тип часов
-    int supportsSIM;       // Поддержка SIM-карты (1 - да, 0 - нет)
-    char osCompatibility[50]; // Совместимость с ОС
-    float screenDiagonal;     // Диагональ экрана
+    char manufacturer[MAX_STR_LEN];
+    char watchType[MAX_STR_LEN];
+    int simSupport; // 1 — да, 0 — нет
+    char osCompatibility[MAX_STR_LEN];
+    float screenDiagonal;
 } SmartWatch;
 
-// Массив записей и количество записей
 SmartWatch records[MAX_RECORDS];
 int recordCount = 0;
 
-// Функция загрузки записей из файла
-void loadRecordsFromFile() {
-    FILE* file = fopen(FILENAME, "r");
-    if (file) {
-        // Читаем данные из файла в массив
-        recordCount = fread(records, sizeof(SmartWatch), MAX_RECORDS, file);
-        fclose(file);
-    }
-}
-
-// Функция сохранения записей в файл
-void saveRecordsToFile() {
-    FILE* file = fopen(FILENAME, "w");
-    if (file) {
-        // Записываем массив в файл
-        fwrite(records, sizeof(SmartWatch), recordCount, file);
-        fclose(file);
-    }
-}
-
-// Функция добавления новой записи
 void addRecord() {
     if (recordCount >= MAX_RECORDS) {
-        printf("Невозможно добавить больше записей. Достигнут максимальный лимит.\n");
+        printf("\nДостигнут предел записей. Добавление новых записей невозможно.\n");
         return;
     }
 
-    SmartWatch sw;
-    // Ввод данных пользователя
-    printf("Введите производителя: ");
-    scanf("%49s", sw.manufacturer);
+    SmartWatch newRecord;
+    printf("\nВведите производителя: ");
+    scanf("%s", newRecord.manufacturer);
+
     printf("Введите тип часов: ");
-    scanf("%49s", sw.type);
-    printf("Поддержка SIM-карты (1 - да, 0 - нет): ");
-    scanf("%d", &sw.supportsSIM);
+    scanf("%s", newRecord.watchType);
+
+    // Проверка корректности ввода поддержки SIM-карты
+    do {
+        printf("Поддержка SIM (1 — Да, 0 — Нет): ");
+        if (scanf("%d", &newRecord.simSupport) != 1 || (newRecord.simSupport != 0 && newRecord.simSupport != 1)) {
+            printf("Ошибка: введите 1 для 'Да' или 0 для 'Нет'.\n");
+            while (getchar() != '\n'); // Очистка буфера ввода
+        }
+        else {
+            break;
+        }
+    } while (1);
+
     printf("Введите совместимость с ОС: ");
-    scanf("%49s", sw.osCompatibility);
-    printf("Введите диагональ экрана: ");
-    scanf("%f", &sw.screenDiagonal);
+    scanf("%s", newRecord.osCompatibility);
 
-    // Добавляем запись в массив
-    records[recordCount++] = sw;
-    saveRecordsToFile(); // Сохраняем изменения в файл
-    printf("Запись успешно добавлена!\n");
+    printf("Введите диагональ экрана (в дюймах): ");
+    scanf("%f", &newRecord.screenDiagonal);
+
+    records[recordCount++] = newRecord;
+    printf("\nЗапись успешно добавлена.\n");
 }
 
-// Функция удаления записи
-void deleteRecord() {
-    if (recordCount == 0) {
-        printf("Нет записей для удаления.\n");
+void addMultipleRecords() {
+    int numRecords;
+    printf("\nВведите количество записей для добавления: ");
+    scanf("%d", &numRecords);
+
+    if (recordCount + numRecords > MAX_RECORDS) {
+        printf("\nНедостаточно места для добавления %d записей. Доступно место для %d записей.\n", numRecords, MAX_RECORDS - recordCount);
         return;
     }
 
-    int index;
-    printf("Введите номер записи для удаления (1-%d): ", recordCount);
-    scanf("%d", &index);
-
-    if (index < 1 || index > recordCount) {
-        printf("Некорректный номер записи.\n");
-        return;
+    for (int i = 0; i < numRecords; i++) {
+        printf("\nДобавление записи %d из %d:\n", i + 1, numRecords);
+        addRecord();
     }
-
-    // Удаляем запись, сдвигая оставшиеся записи влево
-    for (int i = index - 1; i < recordCount - 1; i++) {
-        records[i] = records[i + 1];
-    }
-    recordCount--; // Уменьшаем количество записей
-    saveRecordsToFile(); // Сохраняем изменения в файл
-    printf("Запись удалена успешно.\n");
+    printf("\nВсе записи успешно добавлены.\n");
 }
 
-// Функция вывода всех записей
-void printRecords() {
-    if (recordCount == 0) {
-        printf("Нет записей для отображения.\n");
-        return;
-    }
-
-    for (int i = 0; i < recordCount; i++) {
-        printf("%d. Производитель: %s, Тип: %s, Поддержка SIM: %s, Совместимость с ОС: %s, Диагональ экрана: %.2f\n",
-            i + 1,
-            records[i].manufacturer,
-            records[i].type,
-            records[i].supportsSIM ? "Да" : "Нет",
-            records[i].osCompatibility,
-            records[i].screenDiagonal);
-    }
-}
-
-// Функция сравнения для сортировки по производителю
-int compareByManufacturer(const void* a, const void* b) {
-    return strcmp(((SmartWatch*)a)->manufacturer, ((SmartWatch*)b)->manufacturer);
-}
-
-// Функция сравнения для сортировки по типу часов
-int compareByType(const void* a, const void* b) {
-    return strcmp(((SmartWatch*)a)->type, ((SmartWatch*)b)->type);
-}
-
-// Функция сортировки записей
-void sortRecords() {
-    int choice;
-    printf("Выберите критерий сортировки:\n");
-    printf("1. По производителю\n");
-    printf("2. По типу часов\n");
-    printf("Введите ваш выбор: ");
-    scanf("%d", &choice);
-
-    // Выбор критерия сортировки
-    if (choice == 1) {
-        qsort(records, recordCount, sizeof(SmartWatch), compareByManufacturer);
-        printf("Записи отсортированы по производителю.\n");
-    }
-    else if (choice == 2) {
-        qsort(records, recordCount, sizeof(SmartWatch), compareByType);
-        printf("Записи отсортированы по типу часов.\n");
-    }
-    else {
-        printf("Некорректный выбор!\n");
-    }
-}
-
-// Функция поиска записей по производителю
-void searchByManufacturer() {
-    char manufacturer[50];
-    printf("Введите производителя для поиска: ");
-    scanf("%49s", manufacturer);
+void editRecord() {
+    char manufacturer[MAX_STR_LEN];
+    printf("\nВведите производителя для редактирования: ");
+    scanf("%s", manufacturer);
 
     int found = 0;
     for (int i = 0; i < recordCount; i++) {
         if (strcmp(records[i].manufacturer, manufacturer) == 0) {
-            printf("Найдена запись: Производитель: %s, Тип: %s, Поддержка SIM: %s, Совместимость с ОС: %s, Диагональ экрана: %.2f\n",
-                records[i].manufacturer,
-                records[i].type,
-                records[i].supportsSIM ? "Да" : "Нет",
-                records[i].osCompatibility,
-                records[i].screenDiagonal);
+            printf("\nРедактирование записи:\n");
+            printf("Текущий производитель: %s\n", records[i].manufacturer);
+            printf("Введите новый производитель: ");
+            scanf("%s", records[i].manufacturer);
+
+            printf("Текущий тип часов: %s\n", records[i].watchType);
+            printf("Введите новый тип часов: ");
+            scanf("%s", records[i].watchType);
+
+            printf("Текущая поддержка SIM: %s\n", records[i].simSupport ? "Да" : "Нет");
+            printf("Введите новую поддержку SIM (1 — Да, 0 — Нет): ");
+            scanf("%d", &records[i].simSupport);
+
+            printf("Текущая совместимость с ОС: %s\n", records[i].osCompatibility);
+            printf("Введите новую совместимость с ОС: ");
+            scanf("%s", records[i].osCompatibility);
+
+            printf("Текущая диагональ экрана: %.2f дюйма\n", records[i].screenDiagonal);
+            printf("Введите новую диагональ экрана (в дюймах): ");
+            scanf("%f", &records[i].screenDiagonal);
+
+            printf("\nЗапись успешно обновлена.\n");
             found = 1;
+            break;
         }
     }
 
     if (!found) {
-        printf("Записи с указанным производителем не найдены.\n");
+        printf("\nЗапись с производителем '%s' не найдена.\n", manufacturer);
     }
 }
 
-// Функция поиска записей по типу часов
-void searchByType() {
-    char type[50];
-    printf("Введите тип часов для поиска: ");
-    scanf("%49s", type);
+void searchRecord() {
+    char manufacturer[MAX_STR_LEN];
+    printf("\nВведите производителя для поиска: ");
+    scanf("%s", manufacturer);
 
     int found = 0;
     for (int i = 0; i < recordCount; i++) {
-        if (strcmp(records[i].type, type) == 0) {
-            printf("Найдена запись: Производитель: %s, Тип: %s, Поддержка SIM: %s, Совместимость с ОС: %s, Диагональ экрана: %.2f\n",
-                records[i].manufacturer,
-                records[i].type,
-                records[i].supportsSIM ? "Да" : "Нет",
-                records[i].osCompatibility,
-                records[i].screenDiagonal);
+        if (strcmp(records[i].manufacturer, manufacturer) == 0) {
+            printf("\nЗапись найдена:\n");
+            printf("Производитель: %s\n", records[i].manufacturer);
+            printf("Тип часов: %s\n", records[i].watchType);
+            printf("Поддержка SIM: %s\n", records[i].simSupport ? "Да" : "Нет");
+            printf("Совместимость с ОС: %s\n", records[i].osCompatibility);
+            printf("Диагональ экрана: %.2f дюйма\n", records[i].screenDiagonal);
             found = 1;
         }
     }
 
     if (!found) {
-        printf("Записи с указанным типом часов не найдены.\n");
+        printf("\nЗаписи с производителем '%s' не найдены.\n", manufacturer);
     }
 }
 
-// Главная функция программы
+void saveToFile() {
+    FILE* file = fopen("smartwatches.dat", "wb");
+    if (file == NULL) {
+        printf("\nОшибка при открытии файла для записи.\n");
+        return;
+    }
+
+    fwrite(&recordCount, sizeof(int), 1, file);
+    fwrite(records, sizeof(SmartWatch), recordCount, file);
+
+    fclose(file);
+    printf("\nЗаписи успешно сохранены в файл.\n");
+}
+
+void loadFromFile() {
+    FILE* file = fopen("smartwatches.dat", "rb");
+    if (file == NULL) {
+        printf("\nОшибка при открытии файла для чтения или файл не существует.\n");
+        return;
+    }
+
+    fread(&recordCount, sizeof(int), 1, file);
+    fread(records, sizeof(SmartWatch), recordCount, file);
+
+    fclose(file);
+    printf("\nЗаписи успешно загружены из файла.\n");
+}
+
+void printRecords() {
+    printf("\nВсе записи:\n");
+    for (int i = 0; i < recordCount; i++) {
+        printf("            #%i        \n", i + 1);
+        printf("\nПроизводитель: %s\n", records[i].manufacturer);
+        printf("Тип часов: %s\n", records[i].watchType);
+        printf("Поддержка SIM: %s\n", records[i].simSupport ? "Да" : "Нет");
+        printf("Совместимость с ОС: %s\n", records[i].osCompatibility);
+        printf("Диагональ экрана: %.2f дюйма\n", records[i].screenDiagonal);
+    }
+}
+
+void sortRecords(int criteria) {
+    // Сортировка по производителю или диагонали экрана
+    for (int i = 0; i < recordCount - 1; i++) {
+        for (int j = 0; j < recordCount - i - 1; j++) {
+            int compareResult = 0;
+            if (criteria == 1) {
+                compareResult = strcmp(records[j].manufacturer, records[j + 1].manufacturer);
+            }
+            else if (criteria == 2) {
+                if (records[j].screenDiagonal > records[j + 1].screenDiagonal) {
+                    compareResult = 1;
+                }
+                else if (records[j].screenDiagonal < records[j + 1].screenDiagonal) {
+                    compareResult = -1;
+                }
+            }
+
+            if (compareResult > 0) {
+                SmartWatch temp = records[j];
+                records[j] = records[j + 1];
+                records[j + 1] = temp;
+            }
+        }
+    }
+    printf("\nЗаписи успешно отсортированы.\n");
+}
+
 int main() {
     setlocale(LC_ALL, "RUS");
-    loadRecordsFromFile(); // Загрузка данных при старте программы
-
     int choice;
+
     do {
-        // Главное меню
-        printf("\nУправление смарт-часами\n");
+        printf("\nСистема управления записями о смарт-часах\n");
         printf("1. Добавить запись\n");
-        printf("2. Показать записи\n");
-        printf("3. Сортировать записи\n");
-        printf("4. Найти запись по производителю\n");
-        printf("5. Найти запись по типу часов\n");
-        printf("6. Удалить запись\n");
-        printf("7. Выйти\n");
+        printf("2. Добавить несколько записей\n");
+        printf("3. Найти запись\n");
+        printf("4. Редактировать запись\n");
+        printf("5. Сохранить в файл\n");
+        printf("6. Загрузить из файла\n");
+        printf("7. Показать все записи\n");
+        printf("8. Сортировка записей\n");
+        printf("9. Выход\n");
         printf("Введите ваш выбор: ");
         scanf("%d", &choice);
 
-        // Обработка выбора пользователя
         switch (choice) {
         case 1:
-            addRecord(); // Добавить запись
+            addRecord();
             break;
         case 2:
-            printRecords(); // Печать всех записей
+            addMultipleRecords();
             break;
         case 3:
-            sortRecords(); // Сортировка записей
+            searchRecord();
             break;
         case 4:
-            searchByManufacturer(); // Поиск по производителю
+            editRecord();
             break;
         case 5:
-            searchByType(); // Поиск по типу часов
+            saveToFile();
             break;
         case 6:
-            deleteRecord(); // Удаление записи
+            loadFromFile();
             break;
         case 7:
-            saveRecordsToFile(); // Сохранение перед выходом
-            printf("Выход из программы.\n");
+            printRecords();
+            break;
+        case 8:
+            printf("\nВыберите критерий сортировки:\n");
+            printf("1. По производителю\n");
+            printf("2. По диагонали экрана\n");
+            int criteria;
+            scanf("%d", &criteria);
+            sortRecords(criteria);
+            break;
+        case 9:
+            printf("\nЗавершение программы. До свидания!\n");
             break;
         default:
-            printf("Некорректный выбор. Попробуйте снова.\n");
+            printf("\nНеверный выбор. Пожалуйста, попробуйте снова.\n");
         }
-    } while (choice != 7);
+    } while (choice != 9);
 
     return 0;
 }
