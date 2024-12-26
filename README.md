@@ -1,23 +1,24 @@
-# kursova
 #include <stdio.h>
 #include <locale.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_RECORDS 100
-#define MAX_STR_LEN 50
+#define MAX_RECORDS 100 // Максимальное количество записей
+#define MAX_STR_LEN 50 // Максимальная длина строки для текстовых данных
 
+// Структура для хранения информации о смарт-часах
 typedef struct {
-    char manufacturer[MAX_STR_LEN];
-    char watchType[MAX_STR_LEN];
-    int simSupport; // 1 — да, 0 — нет
-    char osCompatibility[MAX_STR_LEN];
-    float screenDiagonal;
+    char manufacturer[MAX_STR_LEN]; // Производитель
+    char watchType[MAX_STR_LEN]; // Тип часов
+    int simSupport; // Поддержка SIM-карты: 1 - да, 0 - нет
+    char osCompatibility[MAX_STR_LEN]; // Совместимость с ОС
+    float screenDiagonal; // Диагональ экрана
 } SmartWatch;
 
-SmartWatch records[MAX_RECORDS];
-int recordCount = 0;
+SmartWatch records[MAX_RECORDS]; // Массив для хранения записей
+int recordCount = 0; // Текущее количество записей
 
+// Функция для добавления новой записи
 void addRecord() {
     if (recordCount >= MAX_RECORDS) {
         printf("\nДостигнут предел записей. Добавление новых записей невозможно.\n");
@@ -49,10 +50,11 @@ void addRecord() {
     printf("Введите диагональ экрана (в дюймах): ");
     scanf("%f", &newRecord.screenDiagonal);
 
-    records[recordCount++] = newRecord;
+    records[recordCount++] = newRecord; // Добавляем запись в массив
     printf("\nЗапись успешно добавлена.\n");
 }
 
+// Функция для добавления нескольких записей
 void addMultipleRecords() {
     int numRecords;
     printf("\nВведите количество записей для добавления: ");
@@ -70,12 +72,13 @@ void addMultipleRecords() {
     printf("\nВсе записи успешно добавлены.\n");
 }
 
+// Функция для редактирования существующей записи
 void editRecord() {
     char manufacturer[MAX_STR_LEN];
     printf("\nВведите производителя для редактирования: ");
     scanf("%s", manufacturer);
 
-    int found = 0;
+    int found = 0; // Флаг нахождения записи
     for (int i = 0; i < recordCount; i++) {
         if (strcmp(records[i].manufacturer, manufacturer) == 0) {
             printf("\nРедактирование записи:\n");
@@ -110,12 +113,13 @@ void editRecord() {
     }
 }
 
+// Функция для поиска записи по производителю
 void searchRecord() {
     char manufacturer[MAX_STR_LEN];
     printf("\nВведите производителя для поиска: ");
     scanf("%s", manufacturer);
 
-    int found = 0;
+    int found = 0; // Флаг нахождения записи
     for (int i = 0; i < recordCount; i++) {
         if (strcmp(records[i].manufacturer, manufacturer) == 0) {
             printf("\nЗапись найдена:\n");
@@ -133,6 +137,7 @@ void searchRecord() {
     }
 }
 
+// Функция для сохранения записей в файл
 void saveToFile() {
     FILE* file = fopen("smartwatches.dat", "wb");
     if (file == NULL) {
@@ -140,13 +145,14 @@ void saveToFile() {
         return;
     }
 
-    fwrite(&recordCount, sizeof(int), 1, file);
-    fwrite(records, sizeof(SmartWatch), recordCount, file);
+    fwrite(&recordCount, sizeof(int), 1, file); // Сохраняем количество записей
+    fwrite(records, sizeof(SmartWatch), recordCount, file); // Сохраняем массив записей
 
     fclose(file);
     printf("\nЗаписи успешно сохранены в файл.\n");
 }
 
+// Функция для загрузки записей из файла
 void loadFromFile() {
     FILE* file = fopen("smartwatches.dat", "rb");
     if (file == NULL) {
@@ -154,13 +160,14 @@ void loadFromFile() {
         return;
     }
 
-    fread(&recordCount, sizeof(int), 1, file);
-    fread(records, sizeof(SmartWatch), recordCount, file);
+    fread(&recordCount, sizeof(int), 1, file); // Загружаем количество записей
+    fread(records, sizeof(SmartWatch), recordCount, file); // Загружаем массив записей
 
     fclose(file);
     printf("\nЗаписи успешно загружены из файла.\n");
 }
 
+// Функция для вывода всех записей на экран
 void printRecords() {
     printf("\nВсе записи:\n");
     for (int i = 0; i < recordCount; i++) {
@@ -173,6 +180,7 @@ void printRecords() {
     }
 }
 
+// Функция для сортировки записей
 void sortRecords(int criteria) {
     // Сортировка по производителю или диагонали экрана
     for (int i = 0; i < recordCount - 1; i++) {
@@ -201,7 +209,7 @@ void sortRecords(int criteria) {
 }
 
 int main() {
-    setlocale(LC_ALL, "RUS");
+    setlocale(LC_ALL, "RUS"); // Устанавливаем локаль для корректного отображения кириллицы
     int choice;
 
     do {
